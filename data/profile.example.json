@@ -1,0 +1,66 @@
+{
+  "personal": {
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "phone": "+1-555-0100",
+    "current_location": "City, Country",
+    "links": {
+      "github": "https://github.com/janedoe",
+      "linkedin": "https://www.linkedin.com/in/janedoe/",
+      "website": "https://janedoe.example.com",
+      "codeforces": "https://codeforces.com/profile/janedoe"
+    }
+  },
+
+  "target": {
+    "companies_of_interest": ["Example Corp", "Another Co"],
+    "location_preference": "Open to remote or relocation",
+    "tailoring_approach": "No fixed target role title. The resume-tailoring tool reads the specific job description and this full profile, then picks whichever projects/experience/skills best match that JD - the fit is decided per job, not pre-set here.",
+    "notes": "Free text notes about your target search"
+  },
+
+  "education": [
+    {
+      "institution": "Example University",
+      "degree": "B.Tech, Computer Science",
+      "start_date": "2021",
+      "end_date": "2025",
+      "gpa": "8.0/10"
+    }
+  ],
+
+  "experience": [
+    {
+      "company": "Example Company",
+      "title": "Software Engineer",
+      "employment_type": "Full-time",
+      "location": "City, Country",
+      "start_date": "2025-01",
+      "end_date": "Present",
+      "highlights": [
+        "One factual, specific bullet describing something you built or shipped.",
+        "Another bullet - quantify impact where you honestly can."
+      ],
+      "technologies": ["Language", "Framework", "Tool"]
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "Project Name",
+      "tech": ["Language"],
+      "link": "https://github.com/janedoe/project",
+      "description": "One or two sentences describing what it does and the interesting technical decision behind it."
+    }
+  ],
+
+  "skills": {
+    "languages": ["Language1", "Language2"],
+    "systems": ["Area of systems knowledge"],
+    "tools": ["Tool1", "Tool2"]
+  },
+
+  "achievements": [
+    "A verifiable, specific achievement."
+  ]
+}

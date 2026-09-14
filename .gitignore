@@ -1,0 +1,9 @@
+# Real personal data - never tracked, never pushed.
+data/profile.json
+
+# Common editor/OS junk
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+.env
