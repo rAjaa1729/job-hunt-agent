@@ -9,6 +9,47 @@ A personal AI agent that tailors a resume to a specific job description, using a
 3. **Tracking** *(planned)* — logging applications and their status over time.
 4. **Autofill** *(planned, later)* — filling out application forms, once the safer pieces above are solid.
 
+## Getting started
+
+These steps set up the parts that exist right now — the profile and the AI connection. There's no resume-generation command yet (see Project status below).
+
+### 1. Install the dependencies
+
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+A virtual environment (`venv`) keeps this project's packages separate from anything else on your machine.
+
+### 2. Add your own profile
+
+```
+cp data/profile.example.json data/profile.json
+```
+
+Open `data/profile.json` and replace the placeholder values with your real details. This file is private by design — it's listed in `.gitignore`, so it never gets committed or pushed, no matter what.
+
+### 3. Set up an AI provider
+
+```
+cp .env.example .env
+```
+
+Open `.env` and pick one:
+
+- **Cloudflare** (cloud-hosted, free tier with a daily limit) — set `LLM_PROVIDER=cloudflare`, then fill in `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Find the account ID under Workers & Pages in your Cloudflare dashboard; create a token under My Profile → API Tokens with "Workers AI" permission.
+- **Ollama** (runs on your own computer, no daily limit, slower) — set `LLM_PROVIDER=ollama`, install [Ollama](https://ollama.com), make sure it's running, and pull a model first (e.g. `ollama pull qwen3.5:9b`).
+
+### 4. Confirm it's working
+
+```
+python3 src/llm.py
+```
+
+A working setup prints something like `LLM (ollama) replied: works`. If something's misconfigured, the error message explains exactly what to check.
+
 ## Project status
 
 - [x] Profile schema + real data (kept private — see below)
