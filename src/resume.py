@@ -17,7 +17,8 @@ PROFILE_PATH = "data/profile.json"
 MIN_PROJECTS = 3
 MAX_PROJECTS = 6
 
-SYSTEM_PROMPT = f"""You are helping tailor a resume to a specific job description.
+SYSTEM_PROMPT = f"""
+You are helping tailor a resume to a specific job description.
 
 RULES YOU MUST FOLLOW EXACTLY:
 

@@ -1,6 +1,9 @@
 # Real personal data - never tracked, never pushed.
 data/profile.json
 
+# Generated output - build artifacts, not source.
+output/
+
 # Common editor/OS junk
 .DS_Store
 node_modules/
