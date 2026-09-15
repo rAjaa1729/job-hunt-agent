@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+from urllib.parse import urlparse
 
 from job_posting import fetch_job_description
 from resume import tailor_resume, verify_citations
@@ -88,6 +89,30 @@ def _render_pdf(html_path, pdf_path):
         raise RuntimeError(f"Chrome failed to render the PDF:\n{result.stderr}")
 
 
+def _default_output_path(job_url):
+    """
+    Builds a sensible default output filename from a job URL's domain,
+    so generating resumes for different companies does not keep
+    overwriting the same file.
+
+    Parameters:
+        job_url: the web address of the job posting.
+
+    Example: _default_output_path("https://www.google.com/about/careers/...")
+    returns "output/google_resume.pdf".
+
+    Note: this is a simple heuristic based on the domain name, so it
+    works well for a company's own site (google.com -> "google") but
+    less well for a shared job board (e.g. job-boards.greenhouse.io),
+    where the company name is in the URL path, not the domain.
+    """
+    domain = urlparse(job_url).netloc
+    if domain.startswith("www."):
+        domain = domain[len("www.") :]
+    name = domain.split(".")[0] or "resume"
+    return f"output/{name}_resume.pdf"
+
+
 if __name__ == "__main__":
     # Usage: python3 src/generate.py <job posting URL> [output_path]
     if len(sys.argv) < 2:
@@ -95,7 +120,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     job_url = sys.argv[1]
-    output_path = sys.argv[2] if len(sys.argv) > 2 else "output/resume.pdf"
+    output_path = sys.argv[2] if len(sys.argv) > 2 else _default_output_path(job_url)
 
     try:
         generate_resume(job_url, output_path)

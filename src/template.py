@@ -212,17 +212,11 @@ def _build_projects(projects, proj_by_name):
 
 
 def _build_achievements(achievements):
-    """
-    Builds the Achievements section - always copied verbatim, never
-    reworded. Rendered as bold, bullet-free lines (one credential per
-    line) rather than a plain bulleted list, since a row of bullet
-    dots reads as more "job description," while bold standalone lines
-    read more clearly as a list of credentials.
-    """
+    """Builds the Achievements section - always copied verbatim, never reworded."""
     if not achievements:
         return ""
-    items = "\n".join(f"    <p>{_esc(a)}</p>" for a in achievements)
-    return f'<h2>Achievements</h2>\n<div class="achievements">\n{items}\n</div>'
+    items = "\n".join(f"    <li>{_esc(a)}</li>" for a in achievements)
+    return f'<h2>Achievements</h2>\n<ul class="achievements">\n{items}\n</ul>'
 
 
 def _build_activities(activities):
@@ -405,9 +399,8 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
     break-inside: avoid;
   }}
 
-  .achievements p {{
-    margin: 2.5px 0;
-    font-weight: bold;
+  .achievements li {{
+    margin: 2px 0;
   }}
 </style>
 </head>
