@@ -114,7 +114,8 @@ def _call_ollama(messages, max_tokens):
         "model": OLLAMA_MODEL,
         "messages": messages,
         "stream": False,
-        "options": {"num_predict": max_tokens},
+        "think": False,
+        "options": {"num_predict": max_tokens, "num_ctx": 16384},
     }
 
     try:
