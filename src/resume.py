@@ -53,6 +53,11 @@ RULES YOU MUST FOLLOW EXACTLY:
 
 5. Achievements are copied verbatim, never reworded.
 
+6. If the profile has an "activities" list, you may include zero or more
+   of them if genuinely relevant to this job - each one copied exactly
+   (title, organization, dates, description), never reworded. Omit the
+   "activities" field entirely from your response if none are relevant.
+
 Respond with ONLY valid JSON matching this exact shape - no explanation,
 no markdown code fences, nothing before or after the JSON:
 
@@ -67,7 +72,10 @@ no markdown code fences, nothing before or after the JSON:
     {{"name": "...", "tech": ["..."], "description": {{"text": "...", "source": "projects[0].description"}}}}
   ],
   "skills": ["..."],
-  "achievements": ["..."]
+  "achievements": ["..."],
+  "activities": [
+    {{"title": "...", "organization": "...", "start_date": "...", "end_date": "...", "description": "..."}}
+  ]
 }}"""
 
 

@@ -9,7 +9,7 @@ The source of truth for all facts is [`data/profile.json`](../data/profile.json)
 These exist because ATS (Applicant Tracking System) parsers are simple, literal text extractors — not humans. A resume that looks fine to a person can still get mangled or silently rejected by one.
 
 - **Single column only.** A two-column layout makes ATS parsers read the left and right columns in the wrong order, interleaving unrelated text into nonsense.
-- **Standard section order:** Contact → Summary (optional) → Skills → Experience → Education → Projects → Achievements.
+- **Standard section order:** Contact → Summary (optional) → Skills → Experience → Education → Projects → Achievements → Extracurricular & Volunteer Activities (optional).
 - **Real, selectable text.** Never an image or a screenshot of text.
 - **Safe fonts only:** Times New Roman, Arial, Calibri, Georgia, or Helvetica.
 - **1 page** by default. 2 pages only if explicitly justified — never as a default.
@@ -21,6 +21,7 @@ These exist because ATS (Applicant Tracking System) parsers are simple, literal 
 - **Quantify wherever the fact is real.** A number is only used if it is true and traceable to `profile.json` — never invented to sound more impressive.
 - **Match the job description's exact keywords** where honestly applicable — ATS keyword matching is often literal, so close synonyms can fail to register.
 - **Achievements (competitions, ratings, honors) are copied verbatim, never reworded** — these are precise factual claims where rewording risks distorting them.
+- **Extracurricular/volunteer entries are copied verbatim too, never reworded.** The tool may only decide whether to include this section and which entries are most relevant - not rephrase them.
 
 ## 3. Tailoring rule
 

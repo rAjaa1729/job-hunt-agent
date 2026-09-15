@@ -50,7 +50,14 @@
       "name": "Project Name",
       "tech": ["Language"],
       "link": "https://github.com/janedoe/project",
+      "priority": 8,
       "description": "One or two sentences describing what it does and the interesting technical decision behind it."
+    },
+    {
+      "name": "A Project With No Public Repo",
+      "tech": ["Language"],
+      "priority": 5,
+      "description": "The \"link\" field is optional - omit it entirely (not null) for projects that genuinely do not have one."
     }
   ],
 
@@ -62,5 +69,15 @@
 
   "achievements": [
     "A verifiable, specific achievement."
+  ],
+
+  "activities": [
+    {
+      "title": "Volunteer Role or Activity Title",
+      "organization": "Organization Name, City",
+      "start_date": "2024-01",
+      "end_date": "2024-03",
+      "description": "One factual sentence describing what you actually did."
+    }
   ]
 }

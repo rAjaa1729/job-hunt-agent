@@ -38,6 +38,7 @@ def build_resume_html(profile, result):
         _build_education(profile["education"]),
         _build_projects(result.get("projects", []), proj_by_name),
         _build_achievements(result.get("achievements", [])),
+        _build_activities(result.get("activities", [])),
     ]
 
     return _PAGE_TEMPLATE.format(
@@ -222,6 +223,37 @@ def _build_achievements(achievements):
         return ""
     items = "\n".join(f"    <p>{_esc(a)}</p>" for a in achievements)
     return f'<h2>Achievements</h2>\n<div class="achievements">\n{items}\n</div>'
+
+
+def _build_activities(activities):
+    """
+    Builds the optional Extracurricular & Volunteer Activities section
+    - copied verbatim, never reworded, same reasoning as Achievements.
+    Skipped entirely if the AI did not select any as relevant.
+    """
+    if not activities:
+        return ""
+
+    entries = []
+    for activity in activities:
+        dates = _format_date_range(activity.get("start_date"), activity.get("end_date"))
+        role_line = activity["title"]
+        if activity.get("organization"):
+            role_line += f', {activity["organization"]}'
+
+        entries.append(
+            f"""  <div class="entry">
+    <div class="row">
+      <div class="role">{_esc(role_line)}</div>
+      <div class="right">{_esc(dates)}</div>
+    </div>
+    <ul>
+      <li>{_esc(activity.get('description', ''))}</li>
+    </ul>
+  </div>"""
+        )
+
+    return "<h2>Extracurricular &amp; Volunteer Activities</h2>\n" + "\n".join(entries)
 
 
 def _format_date_range(start, end):
