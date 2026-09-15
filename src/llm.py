@@ -79,7 +79,7 @@ def _call_cloudflare(messages, max_tokens):
     }
     payload = {"messages": messages, "max_tokens": max_tokens}
 
-    response = requests.post(url, headers=headers, json=payload, timeout=30)
+    response = requests.post(url, headers=headers, json=payload, timeout=300)
     data = response.json()
 
     if not data.get("success"):

@@ -1,7 +1,8 @@
 """
-The single entry point that turns a job description into a finished
-resume PDF - wiring together every piece built so far: tailoring,
-citation verification, HTML layout, and PDF rendering.
+The single entry point that turns a job posting into a complete
+application package - wiring together every piece built so far:
+fetching, tailoring, citation verification, HTML layout, and PDF
+rendering, for both the resume and the cover letter.
 """
 
 import json
@@ -10,6 +11,8 @@ import subprocess
 import sys
 from urllib.parse import urlparse
 
+from cover_letter import tailor_cover_letter, verify_cover_letter_citations
+from cover_letter_template import build_cover_letter_html
 from job_posting import fetch_job_description
 from resume import tailor_resume, verify_citations
 from template import build_resume_html
@@ -19,41 +22,53 @@ PROFILE_PATH = "data/profile.json"
 CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
-def generate_resume(job_url, output_dir=None):
+def generate_application(job_url, output_dir=None):
     """
-    Produces a tailored resume PDF for one specific job posting.
+    Produces a complete application package for one job posting: a
+    tailored resume and cover letter, both grounded in and verified
+    against your real profile.
 
     Parameters:
         job_url: the web address of the job posting to tailor toward.
         output_dir: the folder to write into, e.g. "output/google".
-            All documents generated for the same application (resume,
-            cover letter, form Q&A, prep guide) live in this same
-            folder. Defaults to a folder named after the job's
-            company, derived from the URL.
+            Defaults to a folder named after the job's company,
+            derived from the URL.
 
-    Example: generate_resume("https://example.com/jobs/123") writes
-    output/example/resume.pdf (and .html) and returns the folder path
-    used, if everything checks out.
+    Example: generate_application("https://example.com/jobs/123")
+    writes output/example/resume.pdf and output/example/cover_letter.pdf
+    (each with a matching .html), and returns the folder path used.
 
-    Raises a clear error and does NOT write a PDF if the page cannot
-    be downloaded, or if any citation fails verification - an
-    unverified resume should never be silently produced.
+    Raises a clear error and does NOT write a document if the page
+    cannot be downloaded, or if any citation fails verification - an
+    unverified document should never be silently produced.
     """
     output_dir = output_dir or _company_folder(job_url)
     os.makedirs(output_dir, exist_ok=True)
+    company_name = _display_name(output_dir)
 
     with open(PROFILE_PATH) as f:
         profile = json.load(f)
 
+    # Fetched once and reused for both documents, rather than hitting
+    # the job posting URL twice.
     job_description = fetch_job_description(job_url)
+
+    _generate_resume(profile, job_description, output_dir)
+    _generate_cover_letter(profile, job_description, output_dir, company_name)
+
+    return output_dir
+
+
+def _generate_resume(profile, job_description, output_dir):
+    """Tailors, verifies, and renders the resume into output_dir/resume.pdf."""
     result = tailor_resume(job_description)
 
     problems = verify_citations(result, profile)
     if problems:
         problem_list = "\n".join(f"  - {p}" for p in problems)
         raise ValueError(
-            "Citation check failed - refusing to produce a resume with "
-            f"unverified claims:\n{problem_list}"
+            "Resume citation check failed - refusing to produce a resume "
+            f"with unverified claims:\n{problem_list}"
         )
 
     html_doc = build_resume_html(profile, result)
@@ -63,7 +78,27 @@ def generate_resume(job_url, output_dir=None):
         f.write(html_doc)
 
     _render_pdf(html_path, pdf_path)
-    return output_dir
+
+
+def _generate_cover_letter(profile, job_description, output_dir, company_name):
+    """Tailors, verifies, and renders the cover letter into output_dir/cover_letter.pdf."""
+    result = tailor_cover_letter(job_description)
+
+    problems = verify_cover_letter_citations(result, profile)
+    if problems:
+        problem_list = "\n".join(f"  - {p}" for p in problems)
+        raise ValueError(
+            "Cover letter citation check failed - refusing to produce a "
+            f"letter with unverified claims:\n{problem_list}"
+        )
+
+    html_doc = build_cover_letter_html(profile, result, company_name)
+    html_path = os.path.join(output_dir, "cover_letter.html")
+    pdf_path = os.path.join(output_dir, "cover_letter.pdf")
+    with open(html_path, "w") as f:
+        f.write(html_doc)
+
+    _render_pdf(html_path, pdf_path)
 
 
 def _render_pdf(html_path, pdf_path):
@@ -123,6 +158,16 @@ def _company_folder(job_url):
     return f"output/{name}"
 
 
+def _display_name(output_dir):
+    """
+    Turns a folder name like "google" or "job-boards" into a
+    presentable name like "Google" or "Job Boards", for use in the
+    cover letter's greeting line.
+    """
+    folder_name = os.path.basename(output_dir.rstrip("/"))
+    return folder_name.replace("-", " ").replace("_", " ").title()
+
+
 if __name__ == "__main__":
     # Usage: python3 src/generate.py <job posting URL> [output_dir]
     if len(sys.argv) < 2:
@@ -133,8 +178,8 @@ if __name__ == "__main__":
     output_dir = sys.argv[2] if len(sys.argv) > 2 else None
 
     try:
-        final_dir = generate_resume(job_url, output_dir)
-        print(f"Resume written to {final_dir}/resume.pdf")
+        final_dir = generate_application(job_url, output_dir)
+        print(f"Application documents written to {final_dir}/")
     except (ValueError, RuntimeError) as error:
         print(f"Error: {error}")
         sys.exit(1)
