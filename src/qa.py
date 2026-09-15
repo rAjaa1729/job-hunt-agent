@@ -33,10 +33,22 @@ For each question, decide whether it is answerable from the profile:
   (something the profile can genuinely answer), write a draft answer
   using ONLY facts that exist in the profile JSON given to you - never
   invent a number, company, project, or achievement. Include a
-  "sources" field: a list of exact paths to where the facts came from,
-  e.g. "experience[0].highlights[2]" or "projects[3].description".
-  Use [N] only for items inside a list, and .fieldname (no brackets)
-  for a named field inside an object.
+  "sources" field: a list of exact paths to where the facts came from
+  IN THE PROFILE - never a path into the job description, and never
+  anything containing the words "job_description".
+
+  Path notation rules:
+  - Use [N] (an actual number, never left empty) only for items inside
+    a LIST, e.g. "experience[0]" is the first experience entry,
+    "experience[0].highlights[2]" is its third highlight. Never write
+    "projects[]" or similar with an empty bracket.
+  - Use .fieldname (no brackets) for a NAMED field inside an object,
+    e.g. "personal.links.github" (never "personal[0].links[0]").
+  - Correct examples: "experience[1].highlights[0]", "projects[3].description",
+    "personal.links.github", "skills.languages[2]".
+
+  Every path must point to a real field that actually exists in the
+  given profile - do not guess at a path's shape.
 
 - If it is a personal/logistics question the profile cannot answer
   (notice period, salary expectations, visa status, availability date,

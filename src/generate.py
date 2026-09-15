@@ -2,7 +2,7 @@
 The single entry point that turns a job posting into a complete
 application package - wiring together every piece built so far:
 fetching, tailoring, citation verification, HTML layout, and PDF
-rendering, for both the resume and the cover letter.
+rendering, for the resume, cover letter, Q&A, and prep guide.
 """
 
 import json
@@ -14,6 +14,8 @@ from urllib.parse import urlparse
 from cover_letter import tailor_cover_letter, verify_cover_letter_citations
 from cover_letter_template import build_cover_letter_html
 from job_posting import fetch_job_description
+from prep_guide import generate_prep_guide, verify_prep_guide_citations
+from prep_guide_template import build_prep_guide_html
 from qa import generate_qa, verify_qa_citations
 from qa_template import build_qa_html
 from resume import tailor_resume, verify_citations
@@ -27,8 +29,8 @@ CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 def generate_application(job_url, output_dir=None):
     """
     Produces a complete application package for one job posting: a
-    tailored resume, cover letter, and application form Q&A, all
-    grounded in and verified against your real profile.
+    tailored resume, cover letter, application form Q&A, and interview
+    prep guide, all grounded in and verified against your real profile.
 
     Parameters:
         job_url: the web address of the job posting to tailor toward.
@@ -37,8 +39,9 @@ def generate_application(job_url, output_dir=None):
             derived from the URL.
 
     Example: generate_application("https://example.com/jobs/123")
-    writes output/example/resume.pdf, cover_letter.pdf, and qa.pdf
-    (each with a matching .html), and returns the folder path used.
+    writes output/example/resume.pdf, cover_letter.pdf, qa.pdf, and
+    prep_guide.pdf (each with a matching .html), and returns the
+    folder path used.
 
     Raises a clear error and does NOT write a document if the page
     cannot be downloaded, or if any citation fails verification - an
@@ -58,6 +61,7 @@ def generate_application(job_url, output_dir=None):
     _generate_resume(profile, job_description, output_dir)
     _generate_cover_letter(profile, job_description, output_dir, company_name)
     _generate_qa(profile, job_description, output_dir, company_name)
+    _generate_prep_guide(profile, job_description, output_dir, company_name)
 
     return output_dir
 
@@ -119,6 +123,27 @@ def _generate_qa(profile, job_description, output_dir, company_name):
     html_doc = build_qa_html(profile, result, company_name)
     html_path = os.path.join(output_dir, "qa.html")
     pdf_path = os.path.join(output_dir, "qa.pdf")
+    with open(html_path, "w") as f:
+        f.write(html_doc)
+
+    _render_pdf(html_path, pdf_path)
+
+
+def _generate_prep_guide(profile, job_description, output_dir, company_name):
+    """Generates, verifies, and renders the interview prep guide into output_dir/prep_guide.pdf."""
+    result = generate_prep_guide(job_description)
+
+    problems = verify_prep_guide_citations(result, profile)
+    if problems:
+        problem_list = "\n".join(f"  - {p}" for p in problems)
+        raise ValueError(
+            "Prep guide citation check failed - refusing to produce a "
+            f"guide with unverified claims:\n{problem_list}"
+        )
+
+    html_doc = build_prep_guide_html(profile, result, company_name)
+    html_path = os.path.join(output_dir, "prep_guide.html")
+    pdf_path = os.path.join(output_dir, "prep_guide.pdf")
     with open(html_path, "w") as f:
         f.write(html_doc)
 
