@@ -33,7 +33,7 @@ def build_resume_html(profile, result):
     sections = [
         _build_header(personal),
         _build_summary(result.get("summary")),
-        _build_skills(result.get("skills", [])),
+        _build_skills(result.get("skills", []), profile["skills"]),
         _build_experience(result.get("experience", []), exp_by_company),
         _build_education(profile["education"]),
         _build_projects(result.get("projects", []), proj_by_name),
@@ -56,11 +56,11 @@ def _build_header(personal):
     if personal.get("phone"):
         parts.append(_esc(personal["phone"]))
     if links.get("github"):
-        parts.append(_link(links["github"]))
+        parts.append(f'<a href="{_esc(links["github"])}">GitHub</a>')
     if links.get("linkedin"):
-        parts.append(_link(links["linkedin"]))
+        parts.append(f'<a href="{_esc(links["linkedin"])}">LinkedIn</a>')
     if links.get("website"):
-        parts.append(_link(links["website"]))
+        parts.append(f'<a href="{_esc(links["website"])}">Portfolio</a>')
 
     contact_line = f' <span class="sep">|</span> '.join(parts)
     return f'<h1>{_esc(personal["name"])}</h1>\n<div class="contact">{contact_line}</div>'
@@ -76,11 +76,40 @@ def _build_summary(summary):
     return f'<h2>Summary</h2>\n<p class="summary">{_esc(summary["text"])}</p>'
 
 
-def _build_skills(skills):
-    """Builds the Skills section from a flat, already-selected list."""
+def _build_skills(skills, profile_skills):
+    """
+    Builds the Skills section, grouped under the same category labels
+    (Languages/Systems/Tools) as the profile - rather than one flat,
+    undifferentiated line, which is harder to scan quickly.
+
+    Parameters:
+        skills: the AI's already-selected flat list of skill names.
+        profile_skills: the profile's "skills" dict (with "languages",
+            "systems", "tools" lists), used to look up which category
+            each selected skill belongs to.
+    """
     if not skills:
         return ""
-    return f'<h2>Skills</h2>\n<div class="skills-row">{_esc(", ".join(skills))}</div>'
+
+    categories = [("languages", "Languages"), ("systems", "Systems"), ("tools", "Tools")]
+    skill_to_category = {
+        name: key for key, _ in categories for name in profile_skills.get(key, [])
+    }
+
+    grouped = {key: [] for key, _ in categories}
+    other = []
+    for skill in skills:
+        category = skill_to_category.get(skill)
+        (grouped[category] if category else other).append(skill)
+
+    rows = []
+    for key, label in categories:
+        if grouped[key]:
+            rows.append(f'<div class="skills-row"><b>{label}:</b> {_esc(", ".join(grouped[key]))}</div>')
+    if other:
+        rows.append(f'<div class="skills-row"><b>Other:</b> {_esc(", ".join(other))}</div>')
+
+    return "<h2>Skills</h2>\n" + "\n".join(rows)
 
 
 def _build_experience(experience, exp_by_company):
@@ -182,11 +211,17 @@ def _build_projects(projects, proj_by_name):
 
 
 def _build_achievements(achievements):
-    """Builds the Achievements section - always copied verbatim, never reworded."""
+    """
+    Builds the Achievements section - always copied verbatim, never
+    reworded. Rendered as bold, bullet-free lines (one credential per
+    line) rather than a plain bulleted list, since a row of bullet
+    dots reads as more "job description," while bold standalone lines
+    read more clearly as a list of credentials.
+    """
     if not achievements:
         return ""
-    items = "\n".join(f"    <li>{_esc(a)}</li>" for a in achievements)
-    return f'<h2>Achievements</h2>\n<ul class="achievements">\n{items}\n</ul>'
+    items = "\n".join(f"    <p>{_esc(a)}</p>" for a in achievements)
+    return f'<h2>Achievements</h2>\n<div class="achievements">\n{items}\n</div>'
 
 
 def _format_date_range(start, end):
@@ -194,12 +229,6 @@ def _format_date_range(start, end):
     if not start:
         return ""
     return f"{start} – {end or 'Present'}"
-
-
-def _link(url):
-    """Renders a URL as a clickable link with the https:// prefix hidden."""
-    display = url.replace("https://", "").replace("http://", "")
-    return f'<a href="{_esc(url)}">{_esc(display)}</a>'
 
 
 def _esc(text):
@@ -215,7 +244,11 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
 <style>
   @page {{
     size: Letter;
-    margin: 0;
+    /* margin-top applies to every printed page, unlike body padding
+       (which only applies once, at the very start of the content) -
+       this is what gives page 2+ the same top breathing room as
+       page 1, instead of starting flush against the edge. */
+    margin: 0.35in 0 0 0;
   }}
 
   * {{
@@ -224,7 +257,7 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
 
   body {{
     margin: 0;
-    padding: 0.35in 0.65in;
+    padding: 0 0.65in 0.35in 0.65in;
 
     font-family: "Times New Roman", Georgia, serif;
     font-size: 9.6pt;
@@ -340,8 +373,9 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
     break-inside: avoid;
   }}
 
-  .achievements li {{
-    margin: 2px 0;
+  .achievements p {{
+    margin: 2.5px 0;
+    font-weight: bold;
   }}
 </style>
 </head>
