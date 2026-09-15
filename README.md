@@ -1,17 +1,52 @@
 # job-hunt-agent
 
-A personal AI agent that tailors a resume to a specific job description, using a single structured profile as its only source of truth — and (eventually) tracks applications end to end.
+A personal AI agent that turns one job posting URL into a complete application package — resume, cover letter, application form Q&A, and interview prep guide — using a single structured profile as its only source of truth.
 
 ## How it's meant to work
 
 1. **Profile** — all real background facts (experience, projects, skills, links) live in one structured file, `data/profile.json`. This is the only thing the agent is ever allowed to draw facts from.
-2. **Tailoring** — given a job description, the agent picks the subset of the profile most relevant to that specific role and writes a resume from it. See [`docs/resume-rules.md`](docs/resume-rules.md) for the exact rules every generated resume must follow, and the checks used to verify it.
-3. **Tracking** *(planned)* — logging applications and their status over time.
-4. **Autofill** *(planned, later)* — filling out application forms, once the safer pieces above are solid.
+2. **Fetching** — given a job posting URL, the agent loads the real page (via headless Chrome, so JavaScript-rendered job boards work too) and extracts the actual job description text.
+3. **Generating** — four documents get tailored to that specific posting:
+   - **Resume** — picks the subset of the profile most relevant to the role. See [`docs/resume-rules.md`](docs/resume-rules.md) for the exact rules every generated resume must follow.
+   - **Cover letter** — a one-page letter with two grounded body paragraphs plus a fixed greeting/closing.
+   - **Application Q&A** — predicts the free-text questions the application form is likely to ask, with a drafted answer for each one the profile can genuinely answer (personal/logistics questions like salary or notice period are left for you to fill in, never guessed).
+   - **Prep guide** — a spoken-style self-introduction plus a handful of key talking points to rehearse before the interview.
+4. **Verifying** — every sentence any of these documents write about you carries a citation back to the exact profile field it came from. Before anything is written to disk, that citation is checked against the real profile — if even one doesn't check out, the document is refused, not silently produced with an unverified claim.
+5. **Tracking** *(planned)* — logging applications and their status over time.
+6. **Autofill** *(planned, later)* — filling out application forms directly, once the safer pieces above are solid.
+
+### The flow, at a glance
+
+```mermaid
+flowchart TD
+    URL[Job posting URL] --> FETCH[Fetch job description<br/>headless Chrome]
+    PROFILE[(profile.json<br/>private, local only)] --> TAILOR
+    FETCH --> TAILOR{Tailor each document}
+
+    TAILOR --> RESUME[Resume]
+    TAILOR --> COVER[Cover letter]
+    TAILOR --> QA[Application Q&A]
+    TAILOR --> PREP[Prep guide]
+
+    RESUME --> CHECK1{Citations verified<br/>against profile.json?}
+    COVER --> CHECK2{Citations verified<br/>against profile.json?}
+    QA --> CHECK3{Citations verified<br/>against profile.json?}
+    PREP --> CHECK4{Citations verified<br/>against profile.json?}
+
+    CHECK1 -->|yes| PDF1[resume.pdf]
+    CHECK2 -->|yes| PDF2[cover_letter.pdf]
+    CHECK3 -->|yes| PDF3[qa.pdf]
+    CHECK4 -->|yes| PDF4[prep_guide.pdf]
+
+    CHECK1 -->|no| REFUSE1[Refused - not written]
+    CHECK2 -->|no| REFUSE2[Refused - not written]
+    CHECK3 -->|no| REFUSE3[Refused - not written]
+    CHECK4 -->|no| REFUSE4[Refused - not written]
+```
 
 ## Getting started
 
-These steps set up the parts that exist right now — the profile and the AI connection. There's no resume-generation command yet (see Project status below).
+These first steps set up the profile and the AI connection. Generating actual documents is step 5, below.
 
 ### 1. Install the dependencies
 
@@ -50,11 +85,35 @@ python3 src/llm.py
 
 A working setup prints something like `LLM (ollama) replied: works`. If something's misconfigured, the error message explains exactly what to check.
 
+### 5. Generate a full application package
+
+```
+python3 src/generate.py "<job posting URL>" [output_dir]
+```
+
+`output_dir` is optional — it defaults to a folder named after the job's company, derived from the URL (e.g. a Google posting lands in `output/google/`). Each run produces:
+
+```
+output/google/
+  resume.pdf        resume.html
+  cover_letter.pdf   cover_letter.html
+  qa.pdf             qa.html
+  prep_guide.pdf     prep_guide.html
+```
+
+If any document's citations fail verification, that document (and only that one) is refused rather than written with an unverified claim — re-running the command usually succeeds, since the AI's output isn't identical every time.
+
 ## Project status
 
 - [x] Profile schema + real data (kept private — see below)
 - [x] Resume tailoring rules defined ([`docs/resume-rules.md`](docs/resume-rules.md))
-- [ ] Resume-tailoring tool (in progress)
+- [x] Job posting fetching (including JavaScript-rendered pages)
+- [x] Resume generation, citation-verified
+- [x] Cover letter generation, citation-verified
+- [x] Application form Q&A generation, citation-verified
+- [x] Interview prep guide generation, citation-verified
+- [ ] Deeper "honesty check" — catches subtle distortion even when a citation is technically valid (currently only checks that a cited path exists, not that the rewritten text still faithfully matches it)
+- [ ] Automatic retry when a generation step fails verification
 - [ ] Application tracking
 - [ ] Form autofill
 
